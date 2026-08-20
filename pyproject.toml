@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "construtor"
+version = "0.1.0"
+description = "Engenheiro do Código — cria projetos do zero e revisa o que foi criado."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = ["anthropic>=0.40.0"]
+
+[project.scripts]
+construtor = "construtor.cli:main"
+
+[tool.setuptools]
+packages = ["construtor"]

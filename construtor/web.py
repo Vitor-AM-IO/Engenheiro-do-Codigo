@@ -343,6 +343,20 @@ function render(d){
   html+='<div id="revisao"></div>';
   if(d.run) html+='<div class="hint" style="margin-top:10px">Como rodar: '+esc(d.run)+'</div>';
   html+='</div>';
+
+  // Prévia ao vivo — só para projetos web (quando há um index.html)
+  const paginaHtml = montarPreview(d.files);
+  if(paginaHtml){
+    html+='<div class="card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'
+      +'<b>👁️ Prévia ao vivo</b>'
+      +'<button class="btn" id="btn-fullscreen" style="margin-left:auto;padding:7px 14px">⛶ Tela cheia</button>'
+      +'</div>'
+      +'<iframe id="preview-frame" style="width:100%;height:420px;border:1px solid var(--line);'
+      +'border-radius:10px;background:#fff" sandbox="allow-scripts allow-forms allow-modals"></iframe>'
+      +'<div class="hint" style="margin-top:8px">É só uma amostra rodando aqui dentro. Baixe o .zip para usar de verdade.</div>'
+      +'</div>';
+  }
+
   for(const f of d.files){
     html+='<details class="card file"><summary>'+esc(f.path)+'</summary>'
       +'<pre>'+esc(f.content)+'</pre></details>';
@@ -350,6 +364,47 @@ function render(d){
   if(d.usage) html+='<div class="hint">Tokens: '+d.usage.input+' entrada / '+d.usage.output+' saída</div>';
   r.innerHTML=html;
   document.getElementById('btn-revisar').onclick=revisarProjeto;
+
+  // injeta a página na prévia (via srcdoc, isolado)
+  if(paginaHtml){
+    const frame=document.getElementById('preview-frame');
+    frame.srcdoc=paginaHtml;
+    window._paginaPreview=paginaHtml;
+    document.getElementById('btn-fullscreen').onclick=abrirTelaCheia;
+  }
+}
+
+// Junta os arquivos web num único HTML (embute CSS e JS inline) para a prévia.
+function montarPreview(files){
+  const byPath={};
+  for(const f of files) byPath[f.path.replace(/^\.\//,'')]=f.content;
+  // acha o index.html (ou qualquer .html)
+  let htmlPath=Object.keys(byPath).find(p=>/(^|\/)index\.html$/i.test(p))
+            || Object.keys(byPath).find(p=>/\.html$/i.test(p));
+  if(!htmlPath) return null;  // não é projeto web → sem prévia
+  let doc=byPath[htmlPath];
+
+  // embute os <link rel=stylesheet href="..."> como <style>
+  doc=doc.replace(/<link[^>]*href=["']([^"']+\.css)["'][^>]*>/gi,(m,href)=>{
+    const css=acharArquivo(byPath,href); return css!=null?('<style>\n'+css+'\n</style>'):m;
+  });
+  // embute os <script src="..."> como <script>inline</script>
+  doc=doc.replace(/<script[^>]*src=["']([^"']+\.js)["'][^>]*><\/script>/gi,(m,src)=>{
+    const js=acharArquivo(byPath,src); return js!=null?('<script>\n'+js+'\n<\/script>'):m;
+  });
+  return doc;
+}
+function acharArquivo(byPath,ref){
+  ref=ref.replace(/^\.\//,'').replace(/^\//,'');
+  if(byPath[ref]!=null) return byPath[ref];
+  // tenta casar só pelo nome do arquivo (caso o caminho tenha pasta)
+  const nome=ref.split('/').pop();
+  const k=Object.keys(byPath).find(p=>p.split('/').pop()===nome);
+  return k!=null?byPath[k]:null;
+}
+function abrirTelaCheia(){
+  const w=window.open('','_blank');
+  if(w){ w.document.open(); w.document.write(window._paginaPreview||''); w.document.close(); }
 }
 
 async function revisarProjeto(){

@@ -11,6 +11,13 @@ Cria projetos em **Python, Java, PHP** e **Web (HTML/CSS/JS)**.
 
 ---
 
+## 👁️ Prévia ao vivo
+
+Quando você gera um projeto **web** (HTML/CSS/JS), aparece uma **prévia rodando ao
+vivo** na própria tela — você vê como ficou na hora, sem baixar nada. Tem botão de
+**tela cheia** para ver em tamanho grande. (Projetos Python/Java não têm prévia,
+pois rodam no terminal.)
+
 ## 🩺 Revisar o que foi criado (Dr. Código embutido)
 
 Depois de gerar um projeto, clique em **🩺 Revisar o que foi criado**. O Engenheiro do Código
